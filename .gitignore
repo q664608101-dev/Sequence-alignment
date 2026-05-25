@@ -1,0 +1,86 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# R / RStudio
+.Rhistory
+.RData
+.Rproj.user/
+
+# Node / frontend tooling
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+coverage/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Sequence alignment outputs and large local data
+*.sam
+*.bam
+*.bai
+*.cram
+*.crai
+*.vcf
+*.vcf.gz
+*.bcf
+*.fastq
+*.fq
+*.fastq.gz
+*.fq.gz
+*.fasta.gz
+*.fa.gz
+*.aln
+*.clustal
+*.maf
+*.blast
+*.out
+results/
+outputs/
+output/
+cache/
+data/raw/
+data/interim/
+data/processed/
