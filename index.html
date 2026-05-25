@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>序列对齐比对</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-label="序列对齐工具">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Sequence Alignment</p>
+            <h1>序列对齐比对</h1>
+          </div>
+          <div class="score-card" aria-live="polite">
+            <span>得分</span>
+            <strong id="scoreValue">0</strong>
+          </div>
+        </header>
+
+        <section class="input-grid" aria-label="输入序列">
+          <label class="field">
+            <span>序列 1</span>
+            <textarea id="sequenceA" spellcheck="false" autocomplete="off">AGCTC</textarea>
+          </label>
+          <label class="field">
+            <span>序列 2</span>
+            <textarea id="sequenceB" spellcheck="false" autocomplete="off">GCTA</textarea>
+          </label>
+        </section>
+
+        <section class="controls" aria-label="比对参数">
+          <label>
+            <span>匹配</span>
+            <input id="matchScore" type="number" value="2" step="1" />
+          </label>
+          <label>
+            <span>错配</span>
+            <input id="mismatchScore" type="number" value="-1" step="1" />
+          </label>
+          <label>
+            <span>缺口</span>
+            <input id="gapScore" type="number" value="-2" step="1" />
+          </label>
+          <button id="alignButton" type="button">对齐</button>
+          <button id="swapButton" type="button" class="secondary">交换</button>
+          <button id="exportWordButton" type="button" class="secondary">导出 Word</button>
+        </section>
+
+        <section class="results" aria-label="比对结果">
+          <div class="summary">
+            <div>
+              <span>长度</span>
+              <strong id="alignedLength">0</strong>
+            </div>
+            <div>
+              <span>匹配</span>
+              <strong id="matchCount">0</strong>
+            </div>
+            <div>
+              <span>差异</span>
+              <strong id="differenceCount">0</strong>
+            </div>
+            <div>
+              <span>相似度</span>
+              <strong id="identityRate">0%</strong>
+            </div>
+          </div>
+
+          <div class="alignment-board" id="alignmentBoard" aria-live="polite"></div>
+          <div class="legend" aria-label="图例">
+            <span><i class="legend-dot match"></i>匹配</span>
+            <span><i class="legend-dot mismatch"></i>错配</span>
+            <span><i class="legend-dot gap"></i>缺失</span>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
