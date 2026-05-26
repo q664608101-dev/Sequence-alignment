@@ -34,7 +34,8 @@ body {
 
 button,
 textarea,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -114,6 +115,22 @@ h1 {
   gap: 8px;
 }
 
+.sequence-name-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 320px);
+}
+
+.name-field {
+  display: grid;
+  gap: 8px;
+}
+
+.name-field span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .main-field textarea {
   min-height: 110px;
 }
@@ -138,9 +155,18 @@ h1 {
 
 .comparison-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.comparison-config {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 150px 96px auto;
   align-items: end;
-  gap: 12px;
+  gap: 10px;
 }
 
 textarea {
@@ -160,7 +186,8 @@ textarea {
 }
 
 textarea:focus,
-input:focus {
+input:focus,
+select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(17, 124, 112, 0.15);
 }
@@ -178,7 +205,8 @@ input:focus {
   gap: 8px;
 }
 
-input {
+input,
+select {
   width: 88px;
   height: 42px;
   padding: 0 10px;
@@ -186,6 +214,19 @@ input {
   border-radius: 8px;
   outline: none;
   background: #fff;
+}
+
+select {
+  width: 100%;
+}
+
+input[type="text"] {
+  width: 100%;
+}
+
+input[type="color"] {
+  width: 100%;
+  padding: 4px;
 }
 
 button {
@@ -223,6 +264,7 @@ button.secondary:hover {
 
 .remove-button {
   height: 42px;
+  min-width: 68px;
   border-color: var(--line);
   color: var(--muted);
   background: #fff;
@@ -300,7 +342,7 @@ button:disabled {
 
 .alignment-row {
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr);
+  grid-template-columns: minmax(92px, 150px) minmax(0, 1fr);
   align-items: center;
   gap: 12px;
 }
@@ -430,7 +472,8 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .comparison-item {
+  .sequence-name-row,
+  .comparison-config {
     grid-template-columns: 1fr;
   }
 
