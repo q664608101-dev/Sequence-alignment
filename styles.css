@@ -338,6 +338,8 @@ button:disabled {
   font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
   font-size: 0.82rem;
   font-weight: 800;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .alignment-row {
