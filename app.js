@@ -1,11 +1,25 @@
 const MAX_COMPARISONS = 5;
-const MARK_CLASSES = ["mark-red", "mark-underline", "mark-yellow", "mark-bold", "mark-italic"];
-const DEFAULT_COMPARISONS = ["GCTA"];
+const DEFAULT_COMPARISONS = [{ name: "对比序列 1", sequence: "GCTA", markType: "color", color: "#c92f35" }];
+const DEFAULT_MARKS = [
+  { markType: "color", color: "#c92f35" },
+  { markType: "underline", color: "#166fca" },
+  { markType: "bold", color: "#117c70" },
+  { markType: "italic", color: "#8a4bd8" },
+  { markType: "color", color: "#d98200" },
+];
+const MARK_TYPE_LABELS = {
+  color: "颜色",
+  underline: "下划线",
+  bold: "加粗",
+  italic: "斜体",
+};
 
 const els = {
+  mainName: document.querySelector("#mainName"),
   mainSequence: document.querySelector("#mainSequence"),
   comparisonList: document.querySelector("#comparisonList"),
   addComparisonButton: document.querySelector("#addComparisonButton"),
+  legend: document.querySelector("#legend"),
   matchScore: document.querySelector("#matchScore"),
   mismatchScore: document.querySelector("#mismatchScore"),
   gapScore: document.querySelector("#gapScore"),
@@ -66,8 +80,8 @@ function alignSequences(seqA, seqB, scoreValues) {
     }
   }
 
-  let alignedA = "";
-  let alignedB = "";
+  let alignedMain = "";
+  let alignedComparison = "";
   let i = seqA.length;
   let j = seqB.length;
 
@@ -75,24 +89,24 @@ function alignSequences(seqA, seqB, scoreValues) {
     const direction = trace[i][j];
 
     if (i > 0 && j > 0 && direction === "diagonal") {
-      alignedA = seqA[i - 1] + alignedA;
-      alignedB = seqB[j - 1] + alignedB;
+      alignedMain = seqA[i - 1] + alignedMain;
+      alignedComparison = seqB[j - 1] + alignedComparison;
       i -= 1;
       j -= 1;
     } else if (i > 0 && (direction === "up" || j === 0)) {
-      alignedA = seqA[i - 1] + alignedA;
-      alignedB = "-" + alignedB;
+      alignedMain = seqA[i - 1] + alignedMain;
+      alignedComparison = "-" + alignedComparison;
       i -= 1;
     } else {
-      alignedA = "-" + alignedA;
-      alignedB = seqB[j - 1] + alignedB;
+      alignedMain = "-" + alignedMain;
+      alignedComparison = seqB[j - 1] + alignedComparison;
       j -= 1;
     }
   }
 
   return {
-    alignedMain: alignedA,
-    alignedComparison: alignedB,
+    alignedMain,
+    alignedComparison,
     score: matrix[seqA.length][seqB.length],
   };
 }
@@ -102,24 +116,56 @@ function classifyPair(a, b) {
   return a === b ? "match" : "mismatch";
 }
 
-function createComparisonField(value = "") {
+function createOption(value, label) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = label;
+  return option;
+}
+
+function createComparisonField(config = {}) {
+  const index = comparisonItems().length;
+  const defaults = DEFAULT_MARKS[index] || DEFAULT_MARKS[0];
   const item = document.createElement("div");
   item.className = "comparison-item";
 
-  const label = document.createElement("label");
-  label.className = "field";
+  const top = document.createElement("div");
+  top.className = "comparison-config";
 
-  const title = document.createElement("span");
-  title.className = "comparison-label";
+  const nameField = document.createElement("label");
+  nameField.className = "name-field";
+  const nameLabel = document.createElement("span");
+  nameLabel.textContent = "名称";
+  const nameInput = document.createElement("input");
+  nameInput.className = "comparison-name";
+  nameInput.type = "text";
+  nameInput.value = config.name || `对比序列 ${index + 1}`;
+  nameInput.addEventListener("input", updateAlignment);
+  nameField.append(nameLabel, nameInput);
 
-  const textarea = document.createElement("textarea");
-  textarea.className = "comparison-sequence";
-  textarea.spellcheck = false;
-  textarea.autocomplete = "off";
-  textarea.value = value;
-  textarea.addEventListener("input", updateAlignment);
+  const markField = document.createElement("label");
+  markField.className = "name-field";
+  const markLabel = document.createElement("span");
+  markLabel.textContent = "标记方式";
+  const markSelect = document.createElement("select");
+  markSelect.className = "comparison-mark";
+  Object.entries(MARK_TYPE_LABELS).forEach(([value, label]) => {
+    markSelect.append(createOption(value, label));
+  });
+  markSelect.value = config.markType || defaults.markType;
+  markSelect.addEventListener("change", updateAlignment);
+  markField.append(markLabel, markSelect);
 
-  label.append(title, textarea);
+  const colorField = document.createElement("label");
+  colorField.className = "name-field color-field";
+  const colorLabel = document.createElement("span");
+  colorLabel.textContent = "颜色";
+  const colorInput = document.createElement("input");
+  colorInput.className = "comparison-color";
+  colorInput.type = "color";
+  colorInput.value = config.color || defaults.color;
+  colorInput.addEventListener("input", updateAlignment);
+  colorField.append(colorLabel, colorInput);
 
   const removeButton = document.createElement("button");
   removeButton.type = "button";
@@ -127,44 +173,66 @@ function createComparisonField(value = "") {
   removeButton.textContent = "删除";
   removeButton.addEventListener("click", () => {
     item.remove();
-    updateComparisonLabels();
+    updateComparisonControls();
     updateAlignment();
   });
 
-  item.append(label, removeButton);
+  top.append(nameField, markField, colorField, removeButton);
+
+  const sequenceField = document.createElement("label");
+  sequenceField.className = "field";
+  const sequenceLabel = document.createElement("span");
+  sequenceLabel.className = "comparison-label";
+  const textarea = document.createElement("textarea");
+  textarea.className = "comparison-sequence";
+  textarea.spellcheck = false;
+  textarea.autocomplete = "off";
+  textarea.value = config.sequence || "";
+  textarea.addEventListener("input", updateAlignment);
+  sequenceField.append(sequenceLabel, textarea);
+
+  item.append(top, sequenceField);
   els.comparisonList.append(item);
-  updateComparisonLabels();
+  updateComparisonControls();
 }
 
-function comparisonTextareas() {
-  return [...document.querySelectorAll(".comparison-sequence")];
+function comparisonItems() {
+  return [...document.querySelectorAll(".comparison-item")];
 }
 
-function updateComparisonLabels() {
-  const items = [...document.querySelectorAll(".comparison-item")];
+function updateComparisonControls() {
+  const items = comparisonItems();
   items.forEach((item, index) => {
-    item.querySelector(".comparison-label").textContent = `对比序列 ${index + 1}`;
+    item.querySelector(".comparison-label").textContent = `序列内容 ${index + 1}`;
     item.querySelector(".remove-button").disabled = items.length === 1;
   });
   els.addComparisonButton.disabled = items.length >= MAX_COMPARISONS;
 }
 
 function comparisonInputs() {
-  return comparisonTextareas()
-    .map((textarea, index) => {
+  return comparisonItems()
+    .map((item, index) => {
+      const textarea = item.querySelector(".comparison-sequence");
       const value = cleanSequence(textarea.value);
       textarea.value = value;
-      return { value, index };
+      return {
+        value,
+        name: item.querySelector(".comparison-name").value.trim() || `对比序列 ${index + 1}`,
+        markType: item.querySelector(".comparison-mark").value,
+        color: item.querySelector(".comparison-color").value,
+        index,
+      };
     })
-    .filter((item) => item.value);
+    .filter((item) => item.value)
+    .slice(0, MAX_COMPARISONS);
 }
 
-function parsePairwiseAlignment(result, mainLength, comparisonIndex) {
+function parsePairwiseAlignment(result, mainLength, mark) {
   const insertions = Array.from({ length: mainLength + 1 }, () => []);
   const bases = Array.from({ length: mainLength }, () => ({
     value: "-",
     type: "gap",
-    markClass: MARK_CLASSES[comparisonIndex],
+    mark,
   }));
 
   let consumedMain = 0;
@@ -174,17 +242,9 @@ function parsePairwiseAlignment(result, mainLength, comparisonIndex) {
     const type = classifyPair(mainChar, comparisonChar);
 
     if (mainChar === "-") {
-      insertions[consumedMain].push({
-        value: comparisonChar,
-        type,
-        markClass: MARK_CLASSES[comparisonIndex],
-      });
+      insertions[consumedMain].push({ value: comparisonChar, type, mark });
     } else {
-      bases[consumedMain] = {
-        value: comparisonChar,
-        type,
-        markClass: MARK_CLASSES[comparisonIndex],
-      };
+      bases[consumedMain] = { value: comparisonChar, type, mark };
       consumedMain += 1;
     }
   }
@@ -193,12 +253,18 @@ function parsePairwiseAlignment(result, mainLength, comparisonIndex) {
 }
 
 function buildAlignmentModel() {
+  const mainName = els.mainName.value.trim() || "主序列";
   const main = cleanSequence(els.mainSequence.value);
   els.mainSequence.value = main;
 
-  const comparisons = comparisonInputs().slice(0, MAX_COMPARISONS);
   const scoreValues = scores();
-  const parsed = comparisons.map((comparison, order) => {
+  const comparisons = comparisonInputs().map((comparison, order) => {
+    const mark = {
+      type: comparison.markType,
+      color: comparison.color,
+      name: comparison.name,
+      order,
+    };
     const alignment = alignSequences(main, comparison.value, scoreValues);
     const pairTypes = [...alignment.alignedMain].map((char, index) =>
       classifyPair(char, alignment.alignedComparison[index]),
@@ -206,21 +272,21 @@ function buildAlignmentModel() {
     const matches = pairTypes.filter((type) => type === "match").length;
 
     return {
-      label: `对比 ${order + 1}`,
+      ...comparison,
       order,
-      raw: comparison.value,
+      mark,
       alignment,
       pairTypes,
       score: alignment.score,
       matches,
       differences: pairTypes.length - matches,
       identity: pairTypes.length ? matches / pairTypes.length : 0,
-      parsed: parsePairwiseAlignment(alignment, main.length, order),
+      parsed: parsePairwiseAlignment(alignment, main.length, mark),
     };
   });
 
   const maxInsertions = Array.from({ length: main.length + 1 }, (_, position) =>
-    Math.max(0, ...parsed.map((item) => item.parsed.insertions[position].length)),
+    Math.max(0, ...comparisons.map((item) => item.parsed.insertions[position].length)),
   );
 
   const columns = [];
@@ -233,20 +299,19 @@ function buildAlignmentModel() {
     }
   }
 
-  return { main, comparisons: parsed, columns };
+  return { mainName, main, comparisons, columns };
 }
 
 function marksForMainCell(column, comparisons) {
   const marks = [];
   comparisons.forEach((comparison) => {
-    const markClass = MARK_CLASSES[comparison.order];
     const cell =
       column.kind === "base"
         ? comparison.parsed.bases[column.position]
         : comparison.parsed.insertions[column.position][column.slot];
 
     if (cell && cell.type !== "match") {
-      marks.push(markClass);
+      marks.push(comparison.mark);
     }
   });
   return marks;
@@ -265,15 +330,32 @@ function comparisonCellForColumn(comparison, column) {
     comparison.parsed.insertions[column.position][column.slot] || {
       value: "-",
       type: "empty",
-      markClass: "",
+      mark: null,
     }
   );
 }
 
-function cell(value, classes = []) {
+function styleTextForMarks(marks) {
+  const styles = [];
+  const colorMark = [...marks].reverse().find((mark) => mark.type === "color");
+  if (colorMark) styles.push(`color:${colorMark.color}`);
+  if (marks.some((mark) => mark.type === "underline")) {
+    const underlineColor = [...marks].reverse().find((mark) => mark.type === "underline")?.color;
+    styles.push("text-decoration-line:underline", "text-decoration-thickness:3px", "text-underline-offset:5px");
+    if (underlineColor) styles.push(`text-decoration-color:${underlineColor}`);
+  }
+  if (marks.some((mark) => mark.type === "bold")) styles.push("font-weight:950");
+  if (marks.some((mark) => mark.type === "italic")) styles.push("font-style:italic");
+  return styles.join(";");
+}
+
+function cell(value, marks = []) {
   const element = document.createElement("span");
-  element.className = ["base", ...classes.filter(Boolean)].join(" ");
+  element.className = "base";
   element.textContent = value;
+  const style = styleTextForMarks(marks);
+  if (style) element.setAttribute("style", style);
+  if (marks.length) element.title = marks.map((mark) => mark.name).join("、");
   return element;
 }
 
@@ -300,6 +382,13 @@ function renderRow(label, values) {
   return row;
 }
 
+function columnRange(columns) {
+  const firstBase = columns.find((column) => column.kind === "base")?.position + 1 || 1;
+  const lastBase =
+    [...columns].reverse().find((column) => column.kind === "base")?.position + 1 || firstBase;
+  return `${firstBase}-${lastBase}`;
+}
+
 function renderAlignment(model) {
   if (!model.main && !model.comparisons.length) {
     els.board.replaceChildren();
@@ -317,30 +406,41 @@ function renderAlignment(model) {
 
     const range = document.createElement("div");
     range.className = "alignment-range";
-    const firstBase = columns.find((column) => column.kind === "base")?.position + 1 || 1;
-    const lastBase =
-      [...columns].reverse().find((column) => column.kind === "base")?.position + 1 ||
-      firstBase;
-    range.textContent = `${firstBase}-${lastBase}`;
+    range.textContent = columnRange(columns);
 
     const mainCells = columns.map((column) =>
       cell(mainCharForColumn(model.main, column), marksForMainCell(column, model.comparisons)),
     );
-    block.append(range, renderRow("主序列", mainCells));
+    block.append(range, renderRow(model.mainName, mainCells));
 
     model.comparisons.forEach((comparison) => {
       const comparisonCells = columns.map((column) => {
         const value = comparisonCellForColumn(comparison, column);
-        const marks = value.type !== "match" && value.type !== "empty" ? [value.markClass] : [];
+        const marks = value.type !== "match" && value.type !== "empty" ? [comparison.mark] : [];
         return cell(value.value, marks);
       });
-      block.append(renderRow(comparison.label, comparisonCells));
+      block.append(renderRow(comparison.name, comparisonCells));
     });
 
     wrap.append(block);
   }
 
   els.board.replaceChildren(wrap);
+}
+
+function renderLegend(model) {
+  els.legend.replaceChildren();
+  model.comparisons.forEach((comparison) => {
+    const item = document.createElement("span");
+    const swatch = document.createElement("i");
+    swatch.className = "legend-swatch";
+    const style = styleTextForMarks([comparison.mark]);
+    if (style) swatch.setAttribute("style", style);
+    const label = document.createElement("span");
+    label.textContent = `${comparison.name}：${MARK_TYPE_LABELS[comparison.mark.type]}`;
+    item.append(swatch, label);
+    els.legend.append(item);
+  });
 }
 
 function updateSummary(model) {
@@ -373,13 +473,8 @@ function escapeHtml(value) {
 }
 
 function wordStyleForMarks(marks) {
-  const styles = [];
-  if (marks.includes("mark-red")) styles.push("color:#c92f35");
-  if (marks.includes("mark-underline")) styles.push("text-decoration:underline");
-  if (marks.includes("mark-yellow")) styles.push("background:#ffe86b");
-  if (marks.includes("mark-bold")) styles.push("font-weight:700");
-  if (marks.includes("mark-italic")) styles.push("font-style:italic");
-  return styles.join(";");
+  const style = styleTextForMarks(marks).replace(/text-decoration-line/g, "text-decoration");
+  return style ? `style="${style}"` : "";
 }
 
 function wordRow(label, columns, model, comparison = null) {
@@ -390,20 +485,45 @@ function wordRow(label, columns, model, comparison = null) {
         : { value: mainCharForColumn(model.main, column), type: "main" };
       const marks = comparison
         ? value.type !== "match" && value.type !== "empty"
-          ? [value.markClass]
+          ? [comparison.mark]
           : []
         : marksForMainCell(column, model.comparisons);
-      const style = wordStyleForMarks(marks);
-      return style
-        ? `<span style="${style}">${escapeHtml(value.value)}</span>`
-        : escapeHtml(value.value);
+      return `<span ${wordStyleForMarks(marks)}>${escapeHtml(value.value)}</span>`;
     })
     .join("");
 
   return `
-    <p style="font-weight:700;margin:14px 0 6px;">${escapeHtml(label)}</p>
-    <p style="font-family:'Courier New',monospace;font-size:12pt;line-height:1.7;word-break:break-all;margin:0;">${sequence}</p>
+    <p style="font-weight:700;margin:12px 0 4px;">${escapeHtml(label)}</p>
+    <p style="font-family:'Courier New',monospace;font-size:12pt;line-height:1.7;word-break:break-all;margin:0 0 6px;">${sequence}</p>
   `;
+}
+
+function wordContinuousSection(model) {
+  return `
+    <h2 style="font-size:16pt;margin:22px 0 10px;">连续序列形式</h2>
+    ${wordRow(model.mainName, model.columns, model)}
+    ${model.comparisons.map((comparison) => wordRow(comparison.name, model.columns, model, comparison)).join("")}
+  `;
+}
+
+function wordBlockSection(model) {
+  const size = 22;
+  const blocks = [];
+  for (let start = 0; start < model.columns.length; start += size) {
+    const columns = model.columns.slice(start, start + size);
+    const rows = [
+      wordRow(model.mainName, columns, model),
+      ...model.comparisons.map((comparison) => wordRow(comparison.name, columns, model, comparison)),
+    ].join("");
+    blocks.push(`
+      <div style="border-top:1px solid #d7dfdc;padding-top:10px;margin-top:14px;">
+        <p style="color:#64706c;font-weight:700;margin:0 0 8px;">${columnRange(columns)}</p>
+        ${rows}
+      </div>
+    `);
+  }
+
+  return `<h2 style="font-size:16pt;margin:26px 0 10px;">分块对照形式</h2>${blocks.join("")}`;
 }
 
 function exportWord() {
@@ -413,13 +533,6 @@ function exportWord() {
     0,
   );
   const totalScore = model.comparisons.reduce((sum, comparison) => sum + comparison.score, 0);
-
-  const rows = [
-    wordRow("主序列", model.columns, model),
-    ...model.comparisons.map((comparison) =>
-      wordRow(`对比序列 ${comparison.order + 1}`, model.columns, model, comparison),
-    ),
-  ].join("");
 
   const html = `
     <!doctype html>
@@ -433,7 +546,8 @@ function exportWord() {
         <p style="margin:0 0 16px;color:#64706c;">
           主序列长度：${model.main.length}　对比条数：${model.comparisons.length}　差异总数：${totalDifferences}　总得分：${totalScore}
         </p>
-        ${rows}
+        ${wordContinuousSection(model)}
+        ${wordBlockSection(model)}
       </body>
     </html>
   `;
@@ -453,17 +567,19 @@ function updateAlignment() {
   const model = buildAlignmentModel();
   updateSummary(model);
   renderAlignment(model);
+  renderLegend(model);
   return model;
 }
 
-DEFAULT_COMPARISONS.forEach((value) => createComparisonField(value));
+DEFAULT_COMPARISONS.forEach((config) => createComparisonField(config));
 
+els.mainName.addEventListener("input", updateAlignment);
 els.mainSequence.addEventListener("input", updateAlignment);
 els.alignButton.addEventListener("click", updateAlignment);
 els.exportWordButton.addEventListener("click", exportWord);
 els.addComparisonButton.addEventListener("click", () => {
-  if (comparisonTextareas().length < MAX_COMPARISONS) {
-    createComparisonField("");
+  if (comparisonItems().length < MAX_COMPARISONS) {
+    createComparisonField();
     updateAlignment();
   }
 });
