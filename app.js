@@ -389,6 +389,20 @@ function columnRange(columns) {
   return `${firstBase}-${lastBase}`;
 }
 
+function comparisonBaseCount(columns, comparison) {
+  return columns.filter((column) => {
+    const value = comparisonCellForColumn(comparison, column);
+    return value.type !== "empty" && value.value !== "-";
+  }).length;
+}
+
+function blockSummary(model, columns) {
+  const comparisonParts = model.comparisons.map(
+    (comparison) => `${comparison.name}：${comparisonBaseCount(columns, comparison)} 个碱基`,
+  );
+  return [`${model.mainName}：${columnRange(columns)}`, ...comparisonParts].join("；");
+}
+
 function renderAlignment(model) {
   if (!model.main && !model.comparisons.length) {
     els.board.replaceChildren();
@@ -406,7 +420,7 @@ function renderAlignment(model) {
 
     const range = document.createElement("div");
     range.className = "alignment-range";
-    range.textContent = columnRange(columns);
+    range.textContent = blockSummary(model, columns);
 
     const mainCells = columns.map((column) =>
       cell(mainCharForColumn(model.main, column), marksForMainCell(column, model.comparisons)),
@@ -494,7 +508,7 @@ function wordRow(label, columns, model, comparison = null) {
 
   return `
     <p style="font-weight:700;margin:12px 0 4px;">${escapeHtml(label)}</p>
-    <p style="font-family:'Courier New',monospace;font-size:12pt;line-height:1.7;word-break:break-all;margin:0 0 6px;">${sequence}</p>
+    <p style="font-family:'Courier New',monospace;font-size:10pt;line-height:1.5;word-break:break-all;margin:0 0 6px;">${sequence}</p>
   `;
 }
 
@@ -507,7 +521,7 @@ function wordContinuousSection(model) {
 }
 
 function wordBlockSection(model) {
-  const size = 22;
+  const size = 44;
   const blocks = [];
   for (let start = 0; start < model.columns.length; start += size) {
     const columns = model.columns.slice(start, start + size);
@@ -517,7 +531,7 @@ function wordBlockSection(model) {
     ].join("");
     blocks.push(`
       <div style="border-top:1px solid #d7dfdc;padding-top:10px;margin-top:14px;">
-        <p style="color:#64706c;font-weight:700;margin:0 0 8px;">${columnRange(columns)}</p>
+        <p style="color:#64706c;font-weight:700;margin:0 0 8px;">${escapeHtml(blockSummary(model, columns))}</p>
         ${rows}
       </div>
     `);
