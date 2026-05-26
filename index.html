@@ -21,6 +21,12 @@
         </header>
 
         <section class="sequence-panel" aria-label="输入序列">
+          <div class="sequence-name-row">
+            <label class="name-field">
+              <span>主序列名称</span>
+              <input id="mainName" type="text" value="主序列" />
+            </label>
+          </div>
           <label class="field main-field">
             <span>主序列</span>
             <textarea id="mainSequence" spellcheck="false" autocomplete="off">AGCTC</textarea>
@@ -73,13 +79,7 @@
           </div>
 
           <div class="alignment-board" id="alignmentBoard" aria-live="polite"></div>
-          <div class="legend" aria-label="图例">
-            <span><i class="legend-swatch mark-red"></i>对比 1：红色</span>
-            <span><i class="legend-swatch mark-underline"></i>对比 2：下划线</span>
-            <span><i class="legend-swatch mark-yellow"></i>对比 3：黄色底纹</span>
-            <span><i class="legend-swatch mark-bold"></i>对比 4：加粗</span>
-            <span><i class="legend-swatch mark-italic"></i>对比 5：斜体</span>
-          </div>
+          <div class="legend" id="legend" aria-label="图例"></div>
         </section>
       </section>
     </main>
